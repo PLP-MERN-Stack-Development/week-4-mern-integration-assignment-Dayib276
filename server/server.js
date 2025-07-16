@@ -2,15 +2,19 @@
 
 // Import required modules
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 
+// Import custom modules
+const connectDB = require('./config/db');
+const errorHandler = require('./middlewares/errorHandler');
+
 // Import routes
-const postRoutes = require('./routes/posts');
-const categoryRoutes = require('./routes/categories');
-const authRoutes = require('./routes/auth');
+const postRoutes = require('./routes/postRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const authRoutes = require('./routes/authRoutes');
+const courseRoutes = require('./routes/courseRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -39,6 +43,7 @@ if (process.env.NODE_ENV === 'development') {
 app.use('/api/posts', postRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/courses', courseRoutes);
 
 // Root route
 app.get('/', (req, res) => {
@@ -46,19 +51,11 @@ app.get('/', (req, res) => {
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.statusCode || 500).json({
-    success: false,
-    error: err.message || 'Server Error',
-  });
-});
+app.use(errorHandler);
 
 // Connect to MongoDB and start server
-mongoose
-  .connect(process.env.MONGODB_URI)
+connectDB()
   .then(() => {
-    console.log('Connected to MongoDB');
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
@@ -75,4 +72,4 @@ process.on('unhandledRejection', (err) => {
   process.exit(1);
 });
 
-module.exports = app; 
+module.exports = app;
